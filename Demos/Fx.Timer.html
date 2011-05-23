@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>n00bsNotNeedApply</title>
+<script src="https://ajax.googleapis.com/ajax/libs/mootools/1.3.2/mootools.js"></script>
+<script src="../Source/dbg.js"></script>
+<script src="../Source/Class.Binds.js"></script>
+<script src="../Source/FullCanvas.js"></script>
+<script src="../Source/Fx.Timer.js"></script>
+<script src="../Source/Vector.js"></script>
+<script src="../Source/Fx.Timer.Dynamic.js"></script>
+
+<style>
+	body {
+		background: #111;
+	}
+
+	.bike {
+		background: #555;
+		border: 3px solid #222;
+		border-radius: 15px;
+		width: 40px;
+		height: 40px;
+		position: absolute;
+		top: 100px;
+		left: 100px;
+	}
+</style>
+
+<script>
+
+var trans = {0: 'x', 1: 'y'};
+
+var Bike = new Class({
+
+	Extends: Fx.Timer.Dynamic,
+
+	options: {
+		fps: 60,
+		init: {
+			v: [200, 160],
+			a: [0, 200]
+		},
+		limit: {
+			x: [0, window.innerWidth],
+			y: [0, window.innerHeight]
+		},
+		bounce: {
+			x: [-1.5, -1.5, 0.5],
+			y: [-1, -0.9,   0.5]
+		}
+	},
+
+	initialize: function(el, options){
+		el = this.element = document.id(el);
+		this.parent(options);
+		this.items.push(el);
+	},
+
+	onStart: function(){
+		this.parent();
+		var pos = this.element.getStyles('top', 'left');
+		this.x[0] = pos.left.toInt();
+		this.x[1] = pos.top.toInt();
+		this.size = this.getSize();
+	},
+
+	onStep: function(dt, elapsed, now){
+		this.parent(dt, elapsed, now);
+		this.limit();
+		this.element.setStyles({
+			left: this.x[0],
+			top: this.x[1]
+		});
+	},
+
+	limit: function(){
+		var limit = this.options.limit, size = this.size;
+		this.x.map(function(y, i){
+			var axis = trans[i], lim = limit[axis];
+			if (y < lim[0]){
+				this.onLimit(i, 0);
+				return lim[0];
+			} else if (y > (lim[1] - size[axis])){
+				this.onLimit(i, 1);
+				return (lim[1] - size[axis]);
+			}
+			return y;
+		}, this);
+	},
+
+	onLimit: function(axis, boundary){
+		var bounce = this.options.bounce[trans[axis]],
+			perpAxis = +(axis == 0); // 0 -> 1, 1 -> 0
+		this.v[axis] *= bounce[boundary];
+		this.v[perpAxis] *= bounce[2];
+	},
+
+	getSize: function(){
+		return this.element.getSize();
+	}
+
+});
+
+window.addEvent('domready', function(){
+
+	(20).times(function(){
+
+		var el = new Element('div.bike').setStyles({
+			left: Number.random(0, 700),
+			top: Number.random(0, 400),
+			opacity: Number.random(),
+			background: 'rgb({r},{g},{b})'.substitute({ r: Number.random(0,255), g: Number.random(0,255), b: Number.random(0, 255) })
+		}).inject(document.body);
+
+		new Bike(el, {
+			init: {
+				v: [Number.random(-300, 300), 0]
+			}
+		}).addEvent('complete', function(){
+			console.log(el, 'has been completed');
+		});
+
+	});
+
+});
+
+</script>
+
+</head>
+<body>
+
+</body>
+</html>
